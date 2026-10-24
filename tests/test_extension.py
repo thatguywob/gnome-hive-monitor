@@ -286,10 +286,19 @@ class TestExtensionLogic(unittest.TestCase):
         self.assertEqual(format_ago(86400), "24h ago")
 
     def test_source_files_exist_and_nonempty(self):
-        for filename in ["extension.js", "prefs.js", "README.md", "CONTRIBUTING.md"]:
+        for filename in ["extension.js", "prefs.js", "README.md", "CONTRIBUTING.md", "SECURITY.md"]:
             path = REPO_ROOT / filename
             self.assertTrue(path.exists(), f"File {filename} must exist")
             self.assertGreater(path.stat().st_size, 0, f"File {filename} must not be empty")
+
+    def test_security_policy_content(self):
+        security_path = REPO_ROOT / "SECURITY.md"
+        self.assertTrue(security_path.exists(), "SECURITY.md must exist")
+        content = security_path.read_text(encoding="utf-8")
+        self.assertIn("Reporting a Vulnerability", content)
+        self.assertIn("security@tunaos.org", content)
+        self.assertIn("hive-token", content)
+        self.assertIn("github-token", content)
 
 
 if __name__ == "__main__":
