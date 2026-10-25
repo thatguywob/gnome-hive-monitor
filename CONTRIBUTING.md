@@ -73,6 +73,22 @@ npm run lint
 
 ESLint finds common errors in the JavaScript, for example undefined variables. It does not run the extension. You must still test the extension in GNOME Shell.
 
+### Executable tests
+
+Use Node.js 22 or later and Python 3. No npm packages are needed:
+
+```bash
+node --experimental-vm-modules --test tests/behavior.cjs
+python3 -m unittest discover -s tests
+```
+
+The JavaScript tests load the production ESM modules with Node's VM module
+loader. GNOME platform imports are test doubles; the extension and both HTTP
+clients execute unchanged. Tests drive settings changes, delayed Soup replies,
+request cancellation, UI labels, repository validation, and relative time.
+The doubles do not test native GJS, Soup, or GNOME Shell compatibility; use a
+live Shell session for those checks. Python tests cover metadata and schema.
+
 ### 1. Schema Compilation Verification
 
 Verify that GSettings schema XML is syntactically valid and compiles cleanly with `--strict`:
