@@ -1,0 +1,71 @@
+name: CI
+
+# The extension's own checks.
+#
+# Prose (ste.yml) is path-gated to '**.md', so before this workflow existed
+# nothing ran on a JavaScript or schema change: tests/test_extension.py was
+# in the tree but no workflow ever executed it.
+#
+# Every step is a command CONTRIBUTING.md already asks a contributor to run
+# before opening a PR. Nothing new is invented here; the same list is
+# enforced.
+#
+# Action SHAs are pinned to the same revisions tuna-os/.github pins in its
+# reusable workflows, so this repo does not drift from org practice.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Tests and validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.x'
+
+      - name: Install GSettings schema compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libglib2.0-bin
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Validate metadata.json
+        run: python3 -m json.tool metadata.json > /dev/null
+
+      - name: Compile GSettings schema (strict)
+        run: glib-compile-schemas --strict --dry-run schemas/
+
+      - name: Check JavaScript syntax
+        # Every .js here is an ES module, so each is copied to .mjs before
+        # node --check: node treats a bare .js file as CommonJS and rejects
+        # the import statements. --check parses without executing, which
+        # catches a syntax error that would otherwise surface only as a
+        # silently dead extension in a user's session.
+        run: |
+          status=0
+          for f in *.js; do
+            echo "==> $f"
+            base="$(basename "$f" .js)"
+            cp "$f" "/tmp/${base}.mjs"
+            node --check "/tmp/${base}.mjs" || status=1
+          done
+          exit $status
