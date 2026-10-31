@@ -1,0 +1,50 @@
+name: CI
+
+# Extension test suite and schema validation.
+#
+# Prose (ste.yml) is path-gated to Markdown files, so before this workflow
+# existed, changes to extension code, schemas, and metadata ran no CI checks.
+#
+# This workflow runs the unit tests and validates the GSettings schema
+# and metadata JSON as required by CONTRIBUTING.md.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: Tests and validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.x'
+
+      - name: Install GSettings schema compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libglib2.0-bin
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Validate metadata.json
+        run: python3 -m json.tool metadata.json > /dev/null
+
+      - name: Compile GSettings schema (strict)
+        run: glib-compile-schemas --strict --dry-run schemas/
