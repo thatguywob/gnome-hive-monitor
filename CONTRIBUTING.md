@@ -64,7 +64,14 @@ journalctl -f -o cat /usr/bin/gnome-shell
 
 ## Validation and Linting
 
-Before you send a pull request, run these validation checks:
+Before you send a pull request, run these validation checks. To run the JavaScript lint check, install Node.js 24 and run:
+
+```bash
+npm ci --ignore-scripts
+npm run lint
+```
+
+ESLint finds common errors in the JavaScript, for example undefined variables. It does not run the extension. You must still test the extension in GNOME Shell.
 
 ### 1. Schema Compilation Verification
 
