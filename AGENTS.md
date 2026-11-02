@@ -37,11 +37,13 @@ hive service or org workflows belong in their source repositories.
 
 ## Local checks
 
-There is no `justfile`, package build step, or JavaScript lint command here.
-Run these commands from the repository root:
+There is no `justfile` or package build step here. Run these commands from
+the repository root:
 
 ```bash
 python3 -m unittest discover -s tests -v
+npm ci
+npm run lint
 python3 -m json.tool metadata.json > /dev/null
 glib-compile-schemas --strict --dry-run schemas/
 gnome-extensions pack --force --extra-source=schemas/
@@ -66,10 +68,14 @@ node ../.github/.github/actions/ste-lint/ste-lint.mjs --summary
 node ../.github/.github/actions/ste-lint/ste-lint.mjs --max "$(cat .ste-budget)"
 ```
 
-This repo has no CI job for extension tests, packaging, or release deployment.
-Run local checks and report their results; a prose check does not test the
-extension. The README is synced to `tuna-os/docs`. Edit its source here so
-the next sync keeps the change. See the
+[CI](.github/workflows/ci.yml) runs unit tests, metadata and schema checks,
+and JavaScript syntax checks.
+[JavaScript lint](.github/workflows/js-lint.yml) runs ESLint.
+Run local checks and report their results. Packaging and live GNOME Shell
+checks still need local tools; CI does not test the Shell UI.
+
+The README is synced to `tuna-os/docs`. Edit its source here so the next sync
+keeps the change. See the
 [org agent guide](https://github.com/tuna-os/.github/blob/main/AGENTS.md)
 for shared workflow scope.
 
