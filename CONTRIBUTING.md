@@ -73,6 +73,15 @@ npm run lint
 
 ESLint finds common errors in the JavaScript, for example undefined variables. It does not run the extension. You must still test the extension in GNOME Shell.
 
+### Tests
+
+```bash
+python3 -m unittest discover -s tests -v
+node --test tests/test_widget.cjs
+```
+
+The Node tests use Shell and Soup doubles. They do not replace a live Shell test.
+
 ### 1. Schema Compilation Verification
 
 Verify that GSettings schema XML is syntactically valid and compiles cleanly with `--strict`:
